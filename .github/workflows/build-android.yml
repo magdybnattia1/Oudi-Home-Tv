@@ -1,0 +1,37 @@
+name: Oudi Android build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          yes | sdkmanager --licenses
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        run: ./gradlew --no-daemon :app:assembleFullDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Oudi-Home-Tv-debug
+          path: app/build/outputs/apk/full/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
