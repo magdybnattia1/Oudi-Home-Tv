@@ -1,0 +1,47 @@
+name: Import Clean Your TV base
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/import-clean-your-tv.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Oudi Home Tv
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Import upstream project without its Git history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ouditv
+          cp .github/workflows/import-clean-your-tv.yml /tmp/import-clean-your-tv.yml
+          git clone --depth 1 https://github.com/udhaykumarbala/cleanyourtv-app.git /tmp/clean-your-tv
+          rsync -a --delete --exclude='.git' --exclude='.github/workflows/import-clean-your-tv.yml' /tmp/clean-your-tv/ ./
+          mkdir -p .github/workflows
+          cp /tmp/import-clean-your-tv.yml .github/workflows/import-clean-your-tv.yml
+          cat > OUDI_PROJECT.md <<'EOF'
+          # Oudi Home Tv
+          
+          This repository is based on Clean Your TV (MIT License).
+          The upstream Android TV management and ADB functionality is retained as the foundation.
+          OUDI branding and interface work will be applied on top of this codebase.
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No import changes to commit."
+            exit 0
+          fi
+          git commit -m "Import Clean Your TV source as Oudi Home Tv base"
+          git push origin HEAD:main
