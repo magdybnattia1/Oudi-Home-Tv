@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Restore pinned upstream data required by the build
+        run: |
+          git clone https://github.com/Gathin23/cleanyourtv.git third_party/cleanyourtv
+          git -C third_party/cleanyourtv checkout b06ab21105c49900cb1ed76b24414dba1e21d0db
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
